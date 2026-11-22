@@ -1,0 +1,7 @@
+.vercel/
+__pycache__/
+certificate-preview.png
+assets/portrait-points.js
+assets/hero-face-source.png
+assets/journey-*.png
+make_portrait_points.py

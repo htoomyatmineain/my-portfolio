@@ -1,0 +1,10 @@
+.git
+.vercel
+__pycache__
+certificate-preview.png
+CONTENT-CHECKLIST.md
+verify.py
+make_portrait_points.py
+assets/portrait-points.js
+assets/hero-face-source.png
+assets/journey-*.png
