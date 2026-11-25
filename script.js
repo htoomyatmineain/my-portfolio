@@ -190,7 +190,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   sync();
 })();
 
-// Hero name particle formation: particles rise from below and assemble into the heading.
+// Hero name particle formation: particles rise from below, assemble, and stay alive with multi-directional wavy black contrast.
 (() => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const h1 = document.querySelector('.hero-copy > h1');
@@ -198,26 +198,39 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   const mutedSpan = h1.querySelector('.muted');
   if (!mutedSpan || !h1.firstChild || !mutedSpan.firstChild) return;
 
-  const startParticles = () => {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'name-particles';
+  canvas.setAttribute('aria-hidden', 'true');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let particles = [];
+  let width = 0;
+  let height = 0;
+  const padBottom = 150;
+  let frame = 0;
+  let visible = true;
+  let startTime = 0;
+  let hasAssembled = false;
+
+  const measureSegment = (node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    return range.getBoundingClientRect();
+  };
+
+  function sampleHeading(animateRise) {
     const h1Rect = h1.getBoundingClientRect();
     if (!h1Rect.width || !h1Rect.height) return;
 
     const style = getComputedStyle(h1);
-    const mutedStyle = getComputedStyle(mutedSpan);
     const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
     const letterSpacing = style.letterSpacing;
-
-    const measureSegment = (node) => {
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      return range.getBoundingClientRect();
-    };
     const firstRect = measureSegment(h1.firstChild);
     const secondRect = measureSegment(mutedSpan.firstChild);
 
-    const padBottom = 150;
-    const width = Math.ceil(h1Rect.width);
-    const height = Math.ceil(h1Rect.height);
+    width = Math.ceil(h1Rect.width);
+    height = Math.ceil(h1Rect.height);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const offscreen = document.createElement('canvas');
@@ -231,89 +244,134 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     octx.textBaseline = 'middle';
 
     const baselineY = height / 2;
-    octx.fillStyle = style.color || '#1d1d1f';
+    // Encode segment membership in color channel (red = primary, blue = muted)
+    octx.fillStyle = 'rgb(255, 0, 0)';
     octx.fillText(h1.firstChild.textContent, firstRect.left - h1Rect.left, baselineY);
-    octx.fillStyle = mutedStyle.color || '#727277';
+    octx.fillStyle = 'rgb(0, 0, 255)';
     octx.fillText(mutedSpan.firstChild.textContent, secondRect.left - h1Rect.left, baselineY);
 
     const imgData = octx.getImageData(0, 0, width, height).data;
     const step = width > 520 ? 3 : 2;
-    const particles = [];
+    const nextParticles = [];
+
     for (let y = 0; y < height; y += step) {
       for (let x = 0; x < width; x += step) {
         const idx = (y * width + x) * 4;
         const alpha = imgData[idx + 3];
         if (alpha > 85) {
-          const r = imgData[idx];
-          const g = imgData[idx + 1];
-          const b = imgData[idx + 2];
-          const delay = (x / width) * 0.28 + Math.random() * 0.18;
-          particles.push({
+          const isMuted = imgData[idx + 2] > imgData[idx];
+          const delay = animateRise ? (x / width) * 0.28 + Math.random() * 0.18 : 0;
+          nextParticles.push({
             tx: x,
             ty: y,
             sx: x + (Math.random() - 0.5) * 34,
             sy: height + 20 + Math.random() * (padBottom - 30),
-            size: step * 0.68,
-            color: `rgb(${r},${g},${b})`,
+            size: step * 0.72,
+            isMuted,
             alpha: alpha / 255,
             delay
           });
         }
       }
     }
-    if (!particles.length) return;
 
-    const canvas = document.createElement('canvas');
-    canvas.className = 'name-particles';
-    canvas.setAttribute('aria-hidden', 'true');
+    if (!nextParticles.length) return;
+    particles = nextParticles;
+
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height + padBottom}px`;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round((height + padBottom) * dpr);
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    h1.classList.add('particles-active');
-    h1.appendChild(canvas);
-
-    const duration = 1.15;
-    let startTime = 0;
-
-    function tick(now) {
-      if (!startTime) startTime = now;
-      const elapsed = (now - startTime) / 1000;
-      ctx.clearRect(0, 0, width, height + padBottom);
-
-      let allDone = true;
-      for (const p of particles) {
-        const t = Math.max(0, Math.min(1, (elapsed - p.delay) / duration));
-        if (t < 1) allDone = false;
-        const ease = 1 - Math.pow(1 - t, 3);
-        const x = p.sx + (p.tx - p.sx) * ease;
-        const y = p.sy + (p.ty - p.sy) * ease;
-        ctx.globalAlpha = p.alpha * Math.min(1, t * 2.2);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(x, y, p.size, p.size);
-      }
-      ctx.globalAlpha = 1;
-
-      if (!allDone) {
-        requestAnimationFrame(tick);
-      } else {
-        h1.classList.remove('particles-active');
-        canvas.style.opacity = '0';
-        setTimeout(() => canvas.remove(), 380);
-      }
+    if (!canvas.parentNode) {
+      h1.classList.add('particles-active');
+      h1.appendChild(canvas);
     }
+    if (animateRise) {
+      startTime = 0;
+      hasAssembled = false;
+    }
+  }
 
-    requestAnimationFrame(tick);
-  };
+  const duration = 1.15;
+
+  function tick(now) {
+    frame = 0;
+    if (!visible || document.hidden || !particles.length) return;
+    if (!startTime) startTime = now;
+    const elapsed = (now - startTime) / 1000;
+
+    ctx.clearRect(0, 0, width, height + padBottom);
+
+    for (const p of particles) {
+      const rawT = hasAssembled ? 1 : Math.max(0, Math.min(1, (elapsed - p.delay) / duration));
+      const ease = 1 - Math.pow(1 - rawT, 3);
+
+      // Multi-directional interfering waves for ongoing motion & black contrast
+      const w1 = Math.sin(p.tx * 0.032 - elapsed * 2.1 + p.ty * 0.024);
+      const w2 = Math.cos(p.tx * 0.018 + p.ty * 0.045 + elapsed * 1.55);
+      const w3 = Math.sin((p.tx - p.ty) * 0.025 + elapsed * 1.2);
+      const wave = (w1 + w2 * 0.8 + w3 * 0.6) / 2.4; // normalized ~[-1, 1]
+      const contrast = 0.5 + 0.5 * wave; // 0..1
+
+      const rippleX = w2 * 0.85 * ease;
+      const rippleY = w1 * 1.1 * ease;
+
+      const x = p.sx + (p.tx - p.sx) * ease + rippleX;
+      const y = p.sy + (p.ty - p.sy) * ease + rippleY;
+
+      // Wavy black contrast: sweeps between deep black and lighter charcoal/slate
+      const lum = p.isMuted
+        ? Math.round(28 + contrast * 98)
+        : Math.round(6 + contrast * 66);
+
+      ctx.globalAlpha = p.alpha * Math.min(1, rawT * 2.2) * (0.78 + 0.22 * (1 - contrast));
+      ctx.fillStyle = `rgb(${lum},${lum},${lum + 2})`;
+      const s = p.size * (0.9 + 0.16 * (1 - contrast));
+      ctx.fillRect(x, y, s, s);
+    }
+    ctx.globalAlpha = 1;
+
+    if (!hasAssembled && elapsed > duration + 0.5) {
+      hasAssembled = true;
+    }
+    frame = requestAnimationFrame(tick);
+  }
+
+  function sync() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    if (visible && !document.hidden && particles.length) {
+      frame = requestAnimationFrame(tick);
+    }
+  }
+
+  function init() {
+    sampleHeading(true);
+    sync();
+    if ('ResizeObserver' in window) {
+      let lastW = width;
+      new ResizeObserver(() => {
+        const nextW = Math.ceil(h1.getBoundingClientRect().width);
+        if (Math.abs(nextW - lastW) > 2) {
+          lastW = nextW;
+          sampleHeading(false);
+        }
+      }).observe(h1);
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        visible = entries[0].isIntersecting;
+        sync();
+      }).observe(h1);
+    }
+    document.addEventListener('visibilitychange', sync);
+  }
 
   if (document.fonts?.ready) {
-    document.fonts.ready.then(() => requestAnimationFrame(startParticles));
+    document.fonts.ready.then(() => requestAnimationFrame(init));
   } else {
-    window.addEventListener('load', () => requestAnimationFrame(startParticles), { once: true });
+    window.addEventListener('load', () => requestAnimationFrame(init), { once: true });
   }
 })();
