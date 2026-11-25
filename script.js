@@ -308,28 +308,24 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
       const rawT = hasAssembled ? 1 : Math.max(0, Math.min(1, (elapsed - p.delay) / duration));
       const ease = 1 - Math.pow(1 - rawT, 3);
 
-      // Multi-directional interfering waves for ongoing motion & black contrast
-      const w1 = Math.sin(p.tx * 0.032 - elapsed * 2.1 + p.ty * 0.024);
-      const w2 = Math.cos(p.tx * 0.018 + p.ty * 0.045 + elapsed * 1.55);
-      const w3 = Math.sin((p.tx - p.ty) * 0.025 + elapsed * 1.2);
-      const wave = (w1 + w2 * 0.8 + w3 * 0.6) / 2.4; // normalized ~[-1, 1]
-      const contrast = 0.5 + 0.5 * wave; // 0..1
+      // Multi-directional interfering waves for high-contrast black shimmer across still letterforms
+      const w1 = Math.sin(p.tx * 0.034 - elapsed * 2.2 + p.ty * 0.026);
+      const w2 = Math.cos(p.tx * 0.02 + p.ty * 0.048 + elapsed * 1.6);
+      const w3 = Math.sin((p.tx - p.ty) * 0.028 + elapsed * 1.35);
+      const wave = (w1 + w2 * 0.85 + w3 * 0.65) / 2.5; // normalized ~[-1, 1]
+      const contrast = Math.pow(Math.max(0, Math.min(1, 0.5 + 0.5 * wave)), 1.35); // 0 = deep black crest, 1 = light trough
 
-      const rippleX = w2 * 0.85 * ease;
-      const rippleY = w1 * 1.1 * ease;
+      const x = p.sx + (p.tx - p.sx) * ease;
+      const y = p.sy + (p.ty - p.sy) * ease;
 
-      const x = p.sx + (p.tx - p.sx) * ease + rippleX;
-      const y = p.sy + (p.ty - p.sy) * ease + rippleY;
-
-      // Wavy black contrast: sweeps between deep black and lighter charcoal/slate
+      // High black contrast: sweeps between pure stark black and lighter slate/gray
       const lum = p.isMuted
-        ? Math.round(28 + contrast * 98)
-        : Math.round(6 + contrast * 66);
+        ? Math.round(12 + contrast * 165)
+        : Math.round(0 + contrast * 135);
 
-      ctx.globalAlpha = p.alpha * Math.min(1, rawT * 2.2) * (0.78 + 0.22 * (1 - contrast));
-      ctx.fillStyle = `rgb(${lum},${lum},${lum + 2})`;
-      const s = p.size * (0.9 + 0.16 * (1 - contrast));
-      ctx.fillRect(x, y, s, s);
+      ctx.globalAlpha = p.alpha * Math.min(1, rawT * 2.2) * (0.62 + 0.38 * (1 - contrast));
+      ctx.fillStyle = `rgb(${lum},${lum},${lum})`;
+      ctx.fillRect(x, y, p.size, p.size);
     }
     ctx.globalAlpha = 1;
 
