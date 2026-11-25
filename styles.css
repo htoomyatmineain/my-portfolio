@@ -177,5 +177,7 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .tech-stack span{font:500 11px ui-monospace,Consolas,monospace;padding:3px 9px;color:#2b2b30;background:#fff;border:1px solid #d4d4dc;border-radius:0}
 .context-hashtags{padding-bottom:14px;border-bottom:1px solid var(--guide);margin-bottom:16px}
 .context-hashtags span{font:600 11px ui-monospace,Consolas,monospace;padding:3px 9px;color:#005bb5;background:#e8f2fc;border:1px solid #c3dcf7;border-radius:0;letter-spacing:.01em}
+.portrait video{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:center;border-radius:0}
+
 
 
