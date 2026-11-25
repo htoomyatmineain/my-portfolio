@@ -190,7 +190,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   sync();
 })();
 
-// Full-screen "Hamriley.dev" intro -> hold -> decompose into particles -> morph into exact "Htoo Myat Min Eain." + navbar drop -> restore normal text.
+// Full-screen "Hamriley.dev" typewriter intro -> hold -> decompose into particles -> smooth morph into "Htoo Myat Min Eain." + navbar drop.
 (() => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const h1 = document.querySelector('.hero-copy > h1');
@@ -206,6 +206,18 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   const introScreen = document.createElement('div');
   introScreen.className = 'intro-screen';
   introScreen.setAttribute('aria-hidden', 'true');
+
+  const introWord = document.createElement('div');
+  introWord.className = 'intro-word';
+
+  const partMain = document.createElement('span');
+  const partExt = document.createElement('span');
+  partExt.className = 'muted';
+  const cursor = document.createElement('span');
+  cursor.className = 'intro-cursor';
+
+  introWord.append(partMain, partExt, cursor);
+  introScreen.appendChild(introWord);
 
   const introCanvas = document.createElement('canvas');
   introCanvas.className = 'intro-canvas';
@@ -223,57 +235,49 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     return;
   }
 
-  let particles = [];
-  let frame = 0;
-  let navTriggered = false;
-  let fadeTriggered = false;
-  let textRestored = false;
-  let startTime = 0;
-
   const measureSegment = (node) => {
     const range = document.createRange();
     range.selectNodeContents(node);
     return range.getBoundingClientRect();
   };
 
-  function sampleIntroText(vw, vh, fontFamily) {
+  function sampleDOMText(node, isMutedFlag, vw, vh) {
+    if (!node.firstChild) return [];
+    const rect = measureSegment(node.firstChild);
+    const style = getComputedStyle(node);
+    const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
     const off = document.createElement('canvas');
     off.width = vw;
     off.height = vh;
     const octx = off.getContext('2d');
     if (!octx) return [];
 
-    const size = Math.round(Math.max(34, Math.min(76, vw * 0.07)));
-    octx.font = `600 ${size}px ${fontFamily}`;
-    if ('letterSpacing' in octx) octx.letterSpacing = `${-0.055 * size}px`;
-    octx.textBaseline = 'middle';
+    octx.font = font;
+    if ('letterSpacing' in octx) octx.letterSpacing = style.letterSpacing;
+    octx.textBaseline = 'alphabetic';
 
-    const part1 = 'Hamriley';
-    const part2 = '.dev';
-    const w1 = octx.measureText(part1).width;
-    const w2 = octx.measureText(part2).width;
-    const startX = (vw - (w1 + w2)) / 2;
-    const centerY = vh / 2;
+    const text = node.firstChild.textContent;
+    const metrics = octx.measureText(text);
+    const ascent = metrics.fontBoundingBoxAscent ?? parseFloat(style.fontSize) * 0.85;
+    const descent = metrics.fontBoundingBoxDescent ?? parseFloat(style.fontSize) * 0.22;
+    const baselineY = rect.top + (rect.height + ascent - descent) / 2;
 
-    octx.fillStyle = 'rgb(255, 0, 0)';
-    octx.fillText(part1, startX, centerY);
-    octx.fillStyle = 'rgb(0, 0, 255)';
-    octx.fillText(part2, startX + w1, centerY);
+    octx.fillStyle = '#000';
+    octx.fillText(text, rect.left, baselineY);
 
-    const xMin = Math.max(0, Math.floor(startX - 8));
-    const xMax = Math.min(vw, Math.ceil(startX + w1 + w2 + 8));
-    const yMin = Math.max(0, Math.floor(centerY - size));
-    const yMax = Math.min(vh, Math.ceil(centerY + size));
+    const xMin = Math.max(0, Math.floor(rect.left - 4));
+    const xMax = Math.min(vw, Math.ceil(rect.right + 4));
+    const yMin = Math.max(0, Math.floor(rect.top - 4));
+    const yMax = Math.min(vh, Math.ceil(rect.bottom + 4));
     const data = octx.getImageData(0, 0, vw, vh).data;
-    const step = vw > 640 ? 2 : 2;
+    const step = 2;
     const pts = [];
 
     for (let y = yMin; y < yMax; y += step) {
       for (let x = xMin; x < xMax; x += step) {
-        const idx = (y * vw + x) * 4;
-        const alpha = data[idx + 3];
+        const alpha = data[(y * vw + x) * 4 + 3];
         if (alpha > 80) {
-          pts.push({ x, y, alpha: alpha / 255, isMuted: data[idx + 2] > data[idx] });
+          pts.push({ x, y, alpha: alpha / 255, isMuted: isMutedFlag });
         }
       }
     }
@@ -282,7 +286,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
 
   function sampleTargetH1() {
     const h1Rect = h1.getBoundingClientRect();
-    if (!h1Rect.width || !h1Rect.height) return { pts: [], rect: h1Rect };
+    if (!h1Rect.width || !h1Rect.height) return [];
 
     const style = getComputedStyle(h1);
     const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
@@ -297,7 +301,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     off.width = w;
     off.height = h;
     const octx = off.getContext('2d');
-    if (!octx) return { pts: [], rect: h1Rect };
+    if (!octx) return [];
 
     octx.font = font;
     if ('letterSpacing' in octx) octx.letterSpacing = letterSpacing;
@@ -306,7 +310,6 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     const metrics = octx.measureText(h1.firstChild.textContent);
     const fontAscent = metrics.fontBoundingBoxAscent ?? parseFloat(style.fontSize) * 0.85;
     const fontDescent = metrics.fontBoundingBoxDescent ?? parseFloat(style.fontSize) * 0.22;
-    // Match CSS inline half-leading vertical centering inside the range line box
     const baselineY = (firstRect.top - h1Rect.top) + (firstRect.height + fontAscent - fontDescent) / 2;
 
     octx.fillStyle = 'rgb(255, 0, 0)';
@@ -326,18 +329,17 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
           pts.push({
             tx: x,
             ty: y,
-            size: step * 0.88,
+            size: step * 0.9,
             isMuted: data[idx + 2] > data[idx],
             alpha: alpha / 255
           });
         }
       }
     }
-
-    return { pts, rect: h1Rect };
+    return pts;
   }
 
-  function setupIntroAndTargets() {
+  function startMorph() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -346,133 +348,144 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     introCanvas.height = Math.round(vh * dpr);
     introCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const fontFamily = getComputedStyle(h1).fontFamily;
-    const introPts = sampleIntroText(vw, vh, fontFamily);
-    const { pts: targetPts, rect: h1Rect } = sampleTargetH1();
+    const introPts = [
+      ...sampleDOMText(partMain, false, vw, vh),
+      ...sampleDOMText(partExt, true, vw, vh)
+    ];
+    const targetPts = sampleTargetH1();
+    const h1Rect = h1.getBoundingClientRect();
 
-    if (!targetPts.length || !introPts.length) {
+    if (!introPts.length || !targetPts.length) {
       h1.classList.remove('particles-managed', 'particles-active');
       introScreen.remove();
       introCanvas.remove();
       if (header) header.classList.remove('nav-hidden');
-      return false;
+      return;
     }
 
     introPts.sort((a, b) => a.x - b.x || a.y - b.y);
     targetPts.sort((a, b) => a.tx - b.tx || a.ty - b.ty);
 
     const total = targetPts.length;
-    particles = targetPts.map((tp, i) => {
+    const particles = targetPts.map((tp, i) => {
       const src = introPts[Math.floor((i / total) * introPts.length)];
       const vx = h1Rect.left + tp.tx;
       const vy = h1Rect.top + tp.ty;
       const arcAngle = Math.random() * Math.PI * 2;
-      const arcMag = 16 + Math.random() * 48;
+      const arcMag = 14 + Math.random() * 42;
       return {
         ...tp,
         ix: src.x,
         iy: src.y,
         iMuted: src.isMuted,
-        entryX: src.x + (Math.random() - 0.5) * 24,
-        entryY: src.y + 18 + Math.random() * 30,
-        entryDelay: (src.x / vw) * 0.22,
         cx: (src.x + vx) * 0.5 + Math.cos(arcAngle) * arcMag,
-        cy: (src.y + vy) * 0.5 + Math.sin(arcAngle) * arcMag - 20,
-        morphDelay: Math.random() * 0.18
+        cy: (src.y + vy) * 0.5 + Math.sin(arcAngle) * arcMag - 18,
+        morphDelay: (i / total) * 0.14 + Math.random() * 0.12
       };
     });
-    return true;
-  }
 
-  function tick(now) {
-    frame = 0;
-    if (document.hidden || !particles.length) return;
-    if (!startTime) startTime = now;
-    const elapsed = (now - startTime) / 1000;
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    introCtx.clearRect(0, 0, vw, vh);
-
-    const morphStart = 1.55;
-    const morphDur = 1.0;
-    const settleEnd = morphStart + morphDur + 0.18;
-
-    if (elapsed > morphStart + 0.2 && !fadeTriggered) {
-      fadeTriggered = true;
-      introScreen.classList.add('fade-out');
+    for (const p of particles) {
+      const lum = p.iMuted ? 114 : 29;
+      introCtx.globalAlpha = p.alpha;
+      introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
+      introCtx.fillRect(p.ix, p.iy, p.size, p.size);
     }
-    if (elapsed > morphStart + morphDur * 0.72 && !navTriggered) {
-      navTriggered = true;
-      if (header) {
-        header.classList.remove('nav-hidden');
-        header.classList.add('nav-drop');
-      }
-    }
+    introCtx.globalAlpha = 1;
+    introWord.classList.add('hidden');
 
-    if (elapsed < morphStart) {
-      for (const p of particles) {
-        const t = Math.max(0, Math.min(1, (elapsed - p.entryDelay) / 0.45));
-        const ease = 1 - Math.pow(1 - t, 3);
-        const x = p.entryX + (p.ix - p.entryX) * ease;
-        const y = p.entryY + (p.iy - p.entryY) * ease;
-        const lum = p.iMuted ? 114 : 29;
-        introCtx.globalAlpha = p.alpha * Math.min(1, t * 2.5);
-        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
-        introCtx.fillRect(x, y, p.size, p.size);
-      }
-      introCtx.globalAlpha = 1;
-    } else if (elapsed < settleEnd) {
-      const liveRect = h1.getBoundingClientRect();
-      for (const p of particles) {
-        const t = Math.max(0, Math.min(1, (elapsed - morphStart - p.morphDelay) / morphDur));
-        const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        const inv = 1 - ease;
-        const vx = liveRect.left + p.tx;
-        const vy = liveRect.top + p.ty;
-        const x = inv * inv * p.ix + 2 * inv * ease * p.cx + ease * ease * vx;
-        const y = inv * inv * p.iy + 2 * inv * ease * p.cy + ease * ease * vy;
-        const lum = p.isMuted ? 114 : 29;
-        introCtx.globalAlpha = p.alpha;
-        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
-        introCtx.fillRect(x, y, p.size, p.size);
-      }
-      introCtx.globalAlpha = 1;
-    } else {
-      // Draw one final crisp settled frame at live coordinates while smoothly crossfading to native text
-      const liveRect = h1.getBoundingClientRect();
-      for (const p of particles) {
-        const lum = p.isMuted ? 114 : 29;
-        introCtx.globalAlpha = p.alpha;
-        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
-        introCtx.fillRect(liveRect.left + p.tx, liveRect.top + p.ty, p.size, p.size);
-      }
-      introCtx.globalAlpha = 1;
+    const morphDur = 1.15;
+    let startTime = 0;
+    let fadeTriggered = false;
+    let navTriggered = false;
+    let handoffStarted = false;
 
-      if (!textRestored) {
-        textRestored = true;
+    function tick(now) {
+      if (document.hidden) {
+        requestAnimationFrame(tick);
+        return;
+      }
+      if (!startTime) startTime = now;
+      const elapsed = (now - startTime) / 1000;
+
+      introCtx.clearRect(0, 0, vw, vh);
+      const liveRect = h1.getBoundingClientRect();
+
+      if (elapsed > 0.14 && !fadeTriggered) {
+        fadeTriggered = true;
+        introScreen.classList.add('fade-out');
+      }
+      if (elapsed > morphDur * 0.68 && !navTriggered) {
+        navTriggered = true;
+        if (header) {
+          header.classList.remove('nav-hidden');
+          header.classList.add('nav-drop');
+        }
+      }
+      if (elapsed > morphDur * 0.92 && !handoffStarted) {
+        handoffStarted = true;
         h1.classList.remove('particles-active');
         introCanvas.style.opacity = '0';
         setTimeout(() => {
           introScreen.remove();
           introCanvas.remove();
-        }, 480);
+        }, 600);
       }
-      return;
+
+      let allDone = true;
+      for (const p of particles) {
+        const t = Math.max(0, Math.min(1, (elapsed - p.morphDelay) / morphDur));
+        if (t < 1) allDone = false;
+        const ease = t < 0.5
+          ? 16 * t * t * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 5) / 2;
+        const inv = 1 - ease;
+        const vx = liveRect.left + p.tx;
+        const vy = liveRect.top + p.ty;
+        const x = inv * inv * p.ix + 2 * inv * ease * p.cx + ease * ease * vx;
+        const y = inv * inv * p.iy + 2 * inv * ease * p.cy + ease * ease * vy;
+        const lum = Math.round((p.iMuted ? 114 : 29) + ((p.isMuted ? 114 : 29) - (p.iMuted ? 114 : 29)) * ease);
+        introCtx.globalAlpha = p.alpha;
+        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
+        introCtx.fillRect(x, y, p.size, p.size);
+      }
+      introCtx.globalAlpha = 1;
+
+      if (!allDone || !handoffStarted) {
+        requestAnimationFrame(tick);
+      }
     }
 
-    frame = requestAnimationFrame(tick);
+    requestAnimationFrame(tick);
   }
 
-  function init() {
-    if (setupIntroAndTargets()) {
-      frame = requestAnimationFrame(tick);
+  function runTypewriter() {
+    const fullMain = 'Hamriley';
+    const fullExt = '.dev';
+    const totalChars = fullMain.length + fullExt.length;
+    let count = 0;
+
+    function typeNext() {
+      count += 1;
+      partMain.textContent = fullMain.slice(0, Math.min(count, fullMain.length));
+      partExt.textContent = count > fullMain.length
+        ? fullExt.slice(0, count - fullMain.length)
+        : '';
+
+      if (count < totalChars) {
+        const ch = (partMain.textContent + partExt.textContent).slice(-1);
+        const delay = ch === '.' ? 130 : 58 + Math.random() * 28;
+        setTimeout(typeNext, delay);
+      } else {
+        setTimeout(() => requestAnimationFrame(startMorph), 900);
+      }
     }
+
+    setTimeout(typeNext, 220);
   }
 
   if (document.fonts?.ready) {
-    document.fonts.ready.then(() => requestAnimationFrame(init));
+    document.fonts.ready.then(runTypewriter);
   } else {
-    window.addEventListener('load', () => requestAnimationFrame(init), { once: true });
+    window.addEventListener('load', runTypewriter, { once: true });
   }
 })();
