@@ -201,7 +201,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   const header = document.querySelector('.header');
   if (header) header.classList.add('nav-hidden');
 
-  h1.classList.add('particles-active');
+  h1.classList.add('particles-managed', 'particles-active');
 
   const introScreen = document.createElement('div');
   introScreen.className = 'intro-screen';
@@ -216,7 +216,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
 
   const introCtx = introCanvas.getContext('2d');
   if (!introCtx) {
-    h1.classList.remove('particles-active');
+    h1.classList.remove('particles-managed', 'particles-active');
     introScreen.remove();
     introCanvas.remove();
     if (header) header.classList.remove('nav-hidden');
@@ -265,14 +265,14 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     const yMin = Math.max(0, Math.floor(centerY - size));
     const yMax = Math.min(vh, Math.ceil(centerY + size));
     const data = octx.getImageData(0, 0, vw, vh).data;
-    const step = vw > 640 ? 3 : 2;
+    const step = vw > 640 ? 2 : 2;
     const pts = [];
 
     for (let y = yMin; y < yMax; y += step) {
       for (let x = xMin; x < xMax; x += step) {
         const idx = (y * vw + x) * 4;
         const alpha = data[idx + 3];
-        if (alpha > 85) {
+        if (alpha > 80) {
           pts.push({ x, y, alpha: alpha / 255, isMuted: data[idx + 2] > data[idx] });
         }
       }
@@ -304,8 +304,10 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     octx.textBaseline = 'alphabetic';
 
     const metrics = octx.measureText(h1.firstChild.textContent);
-    const ascent = metrics.fontBoundingBoxAscent || parseFloat(style.fontSize) * 0.82;
-    const baselineY = (firstRect.top - h1Rect.top) + ascent;
+    const fontAscent = metrics.fontBoundingBoxAscent ?? parseFloat(style.fontSize) * 0.85;
+    const fontDescent = metrics.fontBoundingBoxDescent ?? parseFloat(style.fontSize) * 0.22;
+    // Match CSS inline half-leading vertical centering inside the range line box
+    const baselineY = (firstRect.top - h1Rect.top) + (firstRect.height + fontAscent - fontDescent) / 2;
 
     octx.fillStyle = 'rgb(255, 0, 0)';
     octx.fillText(h1.firstChild.textContent, firstRect.left - h1Rect.left, baselineY);
@@ -313,18 +315,18 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     octx.fillText(mutedSpan.firstChild.textContent, secondRect.left - h1Rect.left, baselineY);
 
     const data = octx.getImageData(0, 0, w, h).data;
-    const step = w > 520 ? 3 : 2;
+    const step = 2;
     const pts = [];
 
     for (let y = 0; y < h; y += step) {
       for (let x = 0; x < w; x += step) {
         const idx = (y * w + x) * 4;
         const alpha = data[idx + 3];
-        if (alpha > 85) {
+        if (alpha > 80) {
           pts.push({
             tx: x,
             ty: y,
-            size: step * 0.72,
+            size: step * 0.88,
             isMuted: data[idx + 2] > data[idx],
             alpha: alpha / 255
           });
@@ -349,7 +351,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     const { pts: targetPts, rect: h1Rect } = sampleTargetH1();
 
     if (!targetPts.length || !introPts.length) {
-      h1.classList.remove('particles-active');
+      h1.classList.remove('particles-managed', 'particles-active');
       introScreen.remove();
       introCanvas.remove();
       if (header) header.classList.remove('nav-hidden');
@@ -365,20 +367,18 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
       const vx = h1Rect.left + tp.tx;
       const vy = h1Rect.top + tp.ty;
       const arcAngle = Math.random() * Math.PI * 2;
-      const arcMag = 18 + Math.random() * 54;
+      const arcMag = 16 + Math.random() * 48;
       return {
         ...tp,
         ix: src.x,
         iy: src.y,
         iMuted: src.isMuted,
-        entryX: src.x + (Math.random() - 0.5) * 26,
-        entryY: src.y + 20 + Math.random() * 32,
+        entryX: src.x + (Math.random() - 0.5) * 24,
+        entryY: src.y + 18 + Math.random() * 30,
         entryDelay: (src.x / vw) * 0.22,
-        vx,
-        vy,
         cx: (src.x + vx) * 0.5 + Math.cos(arcAngle) * arcMag,
-        cy: (src.y + vy) * 0.5 + Math.sin(arcAngle) * arcMag - 22,
-        morphDelay: Math.random() * 0.2
+        cy: (src.y + vy) * 0.5 + Math.sin(arcAngle) * arcMag - 20,
+        morphDelay: Math.random() * 0.18
       };
     });
     return true;
@@ -394,13 +394,9 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     const vh = window.innerHeight;
     introCtx.clearRect(0, 0, vw, vh);
 
-    // 0.0s - 0.55s: "Hamriley.dev" assembles
-    // 0.55s - 1.55s: Pause & hold (1 second) to feel "Hamriley.dev"
-    // 1.55s - 2.65s: Decompose & morph into exact "Htoo Myat Min Eain." position
-    // 2.65s - 3.05s: Crossfade particles out and reveal crisp normal text
     const morphStart = 1.55;
     const morphDur = 1.0;
-    const settleEnd = morphStart + morphDur + 0.2;
+    const settleEnd = morphStart + morphDur + 0.18;
 
     if (elapsed > morphStart + 0.2 && !fadeTriggered) {
       fadeTriggered = true;
@@ -427,12 +423,15 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
       }
       introCtx.globalAlpha = 1;
     } else if (elapsed < settleEnd) {
+      const liveRect = h1.getBoundingClientRect();
       for (const p of particles) {
         const t = Math.max(0, Math.min(1, (elapsed - morphStart - p.morphDelay) / morphDur));
         const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         const inv = 1 - ease;
-        const x = inv * inv * p.ix + 2 * inv * ease * p.cx + ease * ease * p.vx;
-        const y = inv * inv * p.iy + 2 * inv * ease * p.cy + ease * ease * p.vy;
+        const vx = liveRect.left + p.tx;
+        const vy = liveRect.top + p.ty;
+        const x = inv * inv * p.ix + 2 * inv * ease * p.cx + ease * ease * vx;
+        const y = inv * inv * p.iy + 2 * inv * ease * p.cy + ease * ease * vy;
         const lum = p.isMuted ? 114 : 29;
         introCtx.globalAlpha = p.alpha;
         introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
@@ -440,15 +439,24 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
       }
       introCtx.globalAlpha = 1;
     } else {
+      // Draw one final crisp settled frame at live coordinates while smoothly crossfading to native text
+      const liveRect = h1.getBoundingClientRect();
+      for (const p of particles) {
+        const lum = p.isMuted ? 114 : 29;
+        introCtx.globalAlpha = p.alpha;
+        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
+        introCtx.fillRect(liveRect.left + p.tx, liveRect.top + p.ty, p.size, p.size);
+      }
+      introCtx.globalAlpha = 1;
+
       if (!textRestored) {
         textRestored = true;
         h1.classList.remove('particles-active');
-        introCanvas.style.transition = 'opacity .35s ease';
         introCanvas.style.opacity = '0';
         setTimeout(() => {
           introScreen.remove();
           introCanvas.remove();
-        }, 380);
+        }, 480);
       }
       return;
     }
