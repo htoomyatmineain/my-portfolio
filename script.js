@@ -189,3 +189,131 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   button.hidden=false;
   sync();
 })();
+
+// Hero name particle formation: particles rise from below and assemble into the heading.
+(() => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const h1 = document.querySelector('.hero-copy > h1');
+  if (!h1) return;
+  const mutedSpan = h1.querySelector('.muted');
+  if (!mutedSpan || !h1.firstChild || !mutedSpan.firstChild) return;
+
+  const startParticles = () => {
+    const h1Rect = h1.getBoundingClientRect();
+    if (!h1Rect.width || !h1Rect.height) return;
+
+    const style = getComputedStyle(h1);
+    const mutedStyle = getComputedStyle(mutedSpan);
+    const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const letterSpacing = style.letterSpacing;
+
+    const measureSegment = (node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return range.getBoundingClientRect();
+    };
+    const firstRect = measureSegment(h1.firstChild);
+    const secondRect = measureSegment(mutedSpan.firstChild);
+
+    const padBottom = 150;
+    const width = Math.ceil(h1Rect.width);
+    const height = Math.ceil(h1Rect.height);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = width;
+    offscreen.height = height;
+    const octx = offscreen.getContext('2d');
+    if (!octx) return;
+
+    octx.font = font;
+    if ('letterSpacing' in octx) octx.letterSpacing = letterSpacing;
+    octx.textBaseline = 'middle';
+
+    const baselineY = height / 2;
+    octx.fillStyle = style.color || '#1d1d1f';
+    octx.fillText(h1.firstChild.textContent, firstRect.left - h1Rect.left, baselineY);
+    octx.fillStyle = mutedStyle.color || '#727277';
+    octx.fillText(mutedSpan.firstChild.textContent, secondRect.left - h1Rect.left, baselineY);
+
+    const imgData = octx.getImageData(0, 0, width, height).data;
+    const step = width > 520 ? 3 : 2;
+    const particles = [];
+    for (let y = 0; y < height; y += step) {
+      for (let x = 0; x < width; x += step) {
+        const idx = (y * width + x) * 4;
+        const alpha = imgData[idx + 3];
+        if (alpha > 85) {
+          const r = imgData[idx];
+          const g = imgData[idx + 1];
+          const b = imgData[idx + 2];
+          const delay = (x / width) * 0.28 + Math.random() * 0.18;
+          particles.push({
+            tx: x,
+            ty: y,
+            sx: x + (Math.random() - 0.5) * 34,
+            sy: height + 20 + Math.random() * (padBottom - 30),
+            size: step * 0.68,
+            color: `rgb(${r},${g},${b})`,
+            alpha: alpha / 255,
+            delay
+          });
+        }
+      }
+    }
+    if (!particles.length) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'name-particles';
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height + padBottom}px`;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round((height + padBottom) * dpr);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    h1.classList.add('particles-active');
+    h1.appendChild(canvas);
+
+    const duration = 1.15;
+    let startTime = 0;
+
+    function tick(now) {
+      if (!startTime) startTime = now;
+      const elapsed = (now - startTime) / 1000;
+      ctx.clearRect(0, 0, width, height + padBottom);
+
+      let allDone = true;
+      for (const p of particles) {
+        const t = Math.max(0, Math.min(1, (elapsed - p.delay) / duration));
+        if (t < 1) allDone = false;
+        const ease = 1 - Math.pow(1 - t, 3);
+        const x = p.sx + (p.tx - p.sx) * ease;
+        const y = p.sy + (p.ty - p.sy) * ease;
+        ctx.globalAlpha = p.alpha * Math.min(1, t * 2.2);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(x, y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+
+      if (!allDone) {
+        requestAnimationFrame(tick);
+      } else {
+        h1.classList.remove('particles-active');
+        canvas.style.opacity = '0';
+        setTimeout(() => canvas.remove(), 380);
+      }
+    }
+
+    requestAnimationFrame(tick);
+  };
+
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => requestAnimationFrame(startParticles));
+  } else {
+    window.addEventListener('load', () => requestAnimationFrame(startParticles), { once: true });
+  }
+})();
