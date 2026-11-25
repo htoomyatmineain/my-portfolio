@@ -178,6 +178,8 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .context-hashtags{padding-bottom:14px;border-bottom:1px solid var(--guide);margin-bottom:16px}
 .context-hashtags span{font:600 11px ui-monospace,Consolas,monospace;padding:3px 9px;color:#005bb5;background:#e8f2fc;border:1px solid #c3dcf7;border-radius:0;letter-spacing:.01em}
 .portrait video{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:center;border-radius:0}
+.portrait{width:min(100%,460px)}@media(max-width:900px){.portrait{width:100%}}
+
 
 
 
