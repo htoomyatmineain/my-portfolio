@@ -190,7 +190,7 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   sync();
 })();
 
-// Full-screen "Hamriley.dev" intro -> decompose into particles -> morph into "Htoo Myat Min Eain." + navbar drop.
+// Full-screen "Hamriley.dev" intro -> hold -> decompose into particles -> morph into exact "Htoo Myat Min Eain." + navbar drop -> restore normal text.
 (() => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const h1 = document.querySelector('.hero-copy > h1');
@@ -200,6 +200,8 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
 
   const header = document.querySelector('.header');
   if (header) header.classList.add('nav-hidden');
+
+  h1.classList.add('particles-active');
 
   const introScreen = document.createElement('div');
   introScreen.className = 'intro-screen';
@@ -212,13 +214,9 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   document.body.appendChild(introScreen);
   document.body.appendChild(introCanvas);
 
-  const h1Canvas = document.createElement('canvas');
-  h1Canvas.className = 'name-particles';
-  h1Canvas.setAttribute('aria-hidden', 'true');
-
   const introCtx = introCanvas.getContext('2d');
-  const h1Ctx = h1Canvas.getContext('2d');
-  if (!introCtx || !h1Ctx) {
+  if (!introCtx) {
+    h1.classList.remove('particles-active');
     introScreen.remove();
     introCanvas.remove();
     if (header) header.classList.remove('nav-hidden');
@@ -226,13 +224,10 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   }
 
   let particles = [];
-  let h1Width = 0;
-  let h1Height = 0;
   let frame = 0;
-  let visible = true;
-  let introDone = false;
   let navTriggered = false;
   let fadeTriggered = false;
+  let textRestored = false;
   let startTime = 0;
 
   const measureSegment = (node) => {
@@ -295,33 +290,35 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     const firstRect = measureSegment(h1.firstChild);
     const secondRect = measureSegment(mutedSpan.firstChild);
 
-    h1Width = Math.ceil(h1Rect.width);
-    h1Height = Math.ceil(h1Rect.height);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.ceil(h1Rect.width);
+    const h = Math.ceil(h1Rect.height);
 
     const off = document.createElement('canvas');
-    off.width = h1Width;
-    off.height = h1Height;
+    off.width = w;
+    off.height = h;
     const octx = off.getContext('2d');
     if (!octx) return { pts: [], rect: h1Rect };
 
     octx.font = font;
     if ('letterSpacing' in octx) octx.letterSpacing = letterSpacing;
-    octx.textBaseline = 'middle';
+    octx.textBaseline = 'alphabetic';
 
-    const baselineY = h1Height / 2;
+    const metrics = octx.measureText(h1.firstChild.textContent);
+    const ascent = metrics.fontBoundingBoxAscent || parseFloat(style.fontSize) * 0.82;
+    const baselineY = (firstRect.top - h1Rect.top) + ascent;
+
     octx.fillStyle = 'rgb(255, 0, 0)';
     octx.fillText(h1.firstChild.textContent, firstRect.left - h1Rect.left, baselineY);
     octx.fillStyle = 'rgb(0, 0, 255)';
     octx.fillText(mutedSpan.firstChild.textContent, secondRect.left - h1Rect.left, baselineY);
 
-    const data = octx.getImageData(0, 0, h1Width, h1Height).data;
-    const step = h1Width > 520 ? 3 : 2;
+    const data = octx.getImageData(0, 0, w, h).data;
+    const step = w > 520 ? 3 : 2;
     const pts = [];
 
-    for (let y = 0; y < h1Height; y += step) {
-      for (let x = 0; x < h1Width; x += step) {
-        const idx = (y * h1Width + x) * 4;
+    for (let y = 0; y < h; y += step) {
+      for (let x = 0; x < w; x += step) {
+        const idx = (y * w + x) * 4;
         const alpha = data[idx + 3];
         if (alpha > 85) {
           pts.push({
@@ -333,17 +330,6 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
           });
         }
       }
-    }
-
-    h1Canvas.style.width = `${h1Width}px`;
-    h1Canvas.style.height = `${h1Height}px`;
-    h1Canvas.width = Math.round(h1Width * dpr);
-    h1Canvas.height = Math.round(h1Height * dpr);
-    h1Ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    if (!h1Canvas.parentNode) {
-      h1.classList.add('particles-active');
-      h1.appendChild(h1Canvas);
     }
 
     return { pts, rect: h1Rect };
@@ -363,15 +349,13 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     const { pts: targetPts, rect: h1Rect } = sampleTargetH1();
 
     if (!targetPts.length || !introPts.length) {
-      introDone = true;
+      h1.classList.remove('particles-active');
       introScreen.remove();
       introCanvas.remove();
       if (header) header.classList.remove('nav-hidden');
-      particles = targetPts;
-      return;
+      return false;
     }
 
-    // Sort both sets left-to-right so decomposition flows cleanly into the hero name
     introPts.sort((a, b) => a.x - b.x || a.y - b.y);
     targetPts.sort((a, b) => a.tx - b.tx || a.ty - b.ty);
 
@@ -381,148 +365,101 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
       const vx = h1Rect.left + tp.tx;
       const vy = h1Rect.top + tp.ty;
       const arcAngle = Math.random() * Math.PI * 2;
-      const arcMag = 18 + Math.random() * 58;
+      const arcMag = 18 + Math.random() * 54;
       return {
         ...tp,
         ix: src.x,
         iy: src.y,
         iMuted: src.isMuted,
-        // Entry scatter for "Hamriley.dev" reveal
-        entryX: src.x + (Math.random() - 0.5) * 28,
-        entryY: src.y + 22 + Math.random() * 34,
-        entryDelay: (src.x / vw) * 0.25,
-        // Target in viewport coords during morph
+        entryX: src.x + (Math.random() - 0.5) * 26,
+        entryY: src.y + 20 + Math.random() * 32,
+        entryDelay: (src.x / vw) * 0.22,
         vx,
         vy,
-        // Midpoint curve for organic decomposition & flight
         cx: (src.x + vx) * 0.5 + Math.cos(arcAngle) * arcMag,
-        cy: (src.y + vy) * 0.5 + Math.sin(arcAngle) * arcMag - 24,
-        morphDelay: Math.random() * 0.22
+        cy: (src.y + vy) * 0.5 + Math.sin(arcAngle) * arcMag - 22,
+        morphDelay: Math.random() * 0.2
       };
     });
-  }
-
-  function renderSteadyWave(ctx, elapsed, useViewportCoords) {
-    for (const p of particles) {
-      const px = useViewportCoords ? p.vx : p.tx;
-      const py = useViewportCoords ? p.vy : p.ty;
-
-      const w1 = Math.sin(p.tx * 0.034 - elapsed * 2.2 + p.ty * 0.026);
-      const w2 = Math.cos(p.tx * 0.02 + p.ty * 0.048 + elapsed * 1.6);
-      const w3 = Math.sin((p.tx - p.ty) * 0.028 + elapsed * 1.35);
-      const wave = (w1 + w2 * 0.85 + w3 * 0.65) / 2.5;
-      const contrast = Math.pow(Math.max(0, Math.min(1, 0.5 + 0.5 * wave)), 1.35);
-
-      const lum = p.isMuted
-        ? Math.round(12 + contrast * 165)
-        : Math.round(0 + contrast * 135);
-
-      ctx.globalAlpha = p.alpha * (0.62 + 0.38 * (1 - contrast));
-      ctx.fillStyle = `rgb(${lum},${lum},${lum})`;
-      ctx.fillRect(px, py, p.size, p.size);
-    }
-    ctx.globalAlpha = 1;
+    return true;
   }
 
   function tick(now) {
     frame = 0;
-    if ((!introDone && document.hidden) || (introDone && (!visible || document.hidden)) || !particles.length) return;
+    if (document.hidden || !particles.length) return;
     if (!startTime) startTime = now;
     const elapsed = (now - startTime) / 1000;
 
-    if (!introDone) {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      introCtx.clearRect(0, 0, vw, vh);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    introCtx.clearRect(0, 0, vw, vh);
 
-      // Phase 1: 0.0s - 0.55s ("Hamriley.dev" assembles), hold to 0.95s
-      // Phase 2: 0.95s - 2.15s (decompose into particles -> morph into "Htoo Myat Min Eain.")
-      const morphStart = 0.95;
-      const morphDur = 1.05;
+    // 0.0s - 0.55s: "Hamriley.dev" assembles
+    // 0.55s - 1.55s: Pause & hold (1 second) to feel "Hamriley.dev"
+    // 1.55s - 2.65s: Decompose & morph into exact "Htoo Myat Min Eain." position
+    // 2.65s - 3.05s: Crossfade particles out and reveal crisp normal text
+    const morphStart = 1.55;
+    const morphDur = 1.0;
+    const settleEnd = morphStart + morphDur + 0.2;
 
-      if (elapsed > morphStart + 0.2 && !fadeTriggered) {
-        fadeTriggered = true;
-        introScreen.classList.add('fade-out');
+    if (elapsed > morphStart + 0.2 && !fadeTriggered) {
+      fadeTriggered = true;
+      introScreen.classList.add('fade-out');
+    }
+    if (elapsed > morphStart + morphDur * 0.72 && !navTriggered) {
+      navTriggered = true;
+      if (header) {
+        header.classList.remove('nav-hidden');
+        header.classList.add('nav-drop');
       }
-      if (elapsed > morphStart + morphDur * 0.72 && !navTriggered) {
-        navTriggered = true;
-        if (header) {
-          header.classList.remove('nav-hidden');
-          header.classList.add('nav-drop');
-        }
-      }
+    }
 
-      if (elapsed < morphStart) {
-        for (const p of particles) {
-          const t = Math.max(0, Math.min(1, (elapsed - p.entryDelay) / 0.45));
-          const ease = 1 - Math.pow(1 - t, 3);
-          const x = p.entryX + (p.ix - p.entryX) * ease;
-          const y = p.entryY + (p.iy - p.entryY) * ease;
-          const shimmer = Math.sin(p.ix * 0.03 - elapsed * 4.5) * 0.5 + 0.5;
-          const lum = p.iMuted ? Math.round(70 + shimmer * 60) : Math.round(10 + shimmer * 35);
-          introCtx.globalAlpha = p.alpha * Math.min(1, t * 2.5);
-          introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
-          introCtx.fillRect(x, y, p.size, p.size);
-        }
-        introCtx.globalAlpha = 1;
-      } else if (elapsed < morphStart + morphDur + 0.25) {
-        for (const p of particles) {
-          const t = Math.max(0, Math.min(1, (elapsed - morphStart - p.morphDelay) / morphDur));
-          const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-          const inv = 1 - ease;
-          // Quadratic Bezier flight from Hamriley.dev -> Htoo Myat Min Eain.
-          const x = inv * inv * p.ix + 2 * inv * ease * p.cx + ease * ease * p.vx;
-          const y = inv * inv * p.iy + 2 * inv * ease * p.cy + ease * ease * p.vy;
-          const lum = p.isMuted ? Math.round(20 + (1 - ease) * 30) : 12;
-          introCtx.globalAlpha = p.alpha;
-          introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
-          introCtx.fillRect(x, y, p.size, p.size);
-        }
-        introCtx.globalAlpha = 1;
-      } else {
-        introDone = true;
-        introScreen.remove();
-        introCanvas.remove();
-        h1Ctx.clearRect(0, 0, h1Width, h1Height);
-        renderSteadyWave(h1Ctx, elapsed, false);
+    if (elapsed < morphStart) {
+      for (const p of particles) {
+        const t = Math.max(0, Math.min(1, (elapsed - p.entryDelay) / 0.45));
+        const ease = 1 - Math.pow(1 - t, 3);
+        const x = p.entryX + (p.ix - p.entryX) * ease;
+        const y = p.entryY + (p.iy - p.entryY) * ease;
+        const lum = p.iMuted ? 114 : 29;
+        introCtx.globalAlpha = p.alpha * Math.min(1, t * 2.5);
+        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
+        introCtx.fillRect(x, y, p.size, p.size);
       }
+      introCtx.globalAlpha = 1;
+    } else if (elapsed < settleEnd) {
+      for (const p of particles) {
+        const t = Math.max(0, Math.min(1, (elapsed - morphStart - p.morphDelay) / morphDur));
+        const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const inv = 1 - ease;
+        const x = inv * inv * p.ix + 2 * inv * ease * p.cx + ease * ease * p.vx;
+        const y = inv * inv * p.iy + 2 * inv * ease * p.cy + ease * ease * p.vy;
+        const lum = p.isMuted ? 114 : 29;
+        introCtx.globalAlpha = p.alpha;
+        introCtx.fillStyle = `rgb(${lum},${lum},${lum})`;
+        introCtx.fillRect(x, y, p.size, p.size);
+      }
+      introCtx.globalAlpha = 1;
     } else {
-      h1Ctx.clearRect(0, 0, h1Width, h1Height);
-      renderSteadyWave(h1Ctx, elapsed, false);
+      if (!textRestored) {
+        textRestored = true;
+        h1.classList.remove('particles-active');
+        introCanvas.style.transition = 'opacity .35s ease';
+        introCanvas.style.opacity = '0';
+        setTimeout(() => {
+          introScreen.remove();
+          introCanvas.remove();
+        }, 380);
+      }
+      return;
     }
 
     frame = requestAnimationFrame(tick);
   }
 
-  function sync() {
-    cancelAnimationFrame(frame);
-    frame = 0;
-    if ((!introDone || visible) && !document.hidden && particles.length) {
+  function init() {
+    if (setupIntroAndTargets()) {
       frame = requestAnimationFrame(tick);
     }
-  }
-
-  function init() {
-    setupIntroAndTargets();
-    sync();
-    if ('ResizeObserver' in window) {
-      let lastW = h1Width;
-      new ResizeObserver(() => {
-        const nextW = Math.ceil(h1.getBoundingClientRect().width);
-        if (Math.abs(nextW - lastW) > 2) {
-          lastW = nextW;
-          const { pts } = sampleTargetH1();
-          if (pts.length) particles = pts;
-        }
-      }).observe(h1);
-    }
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((entries) => {
-        visible = entries[0].isIntersecting;
-        sync();
-      }).observe(h1);
-    }
-    document.addEventListener('visibilitychange', sync);
   }
 
   if (document.fonts?.ready) {

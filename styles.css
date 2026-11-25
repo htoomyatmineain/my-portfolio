@@ -188,8 +188,9 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .portrait{width:min(100%,460px)}@media(max-width:900px){.portrait{width:100%}}
 .hero h1{font-size:clamp(32px,9.8cqw,78px)}@media(max-width:900px){.hero h1{font-size:clamp(38px,9.8cqw,68px)}}@media(max-width:600px){.hero h1{font-size:clamp(28px,9.8cqw,52px)}}
 .hero h1,.hero h1 .muted{transition:color .35s ease}
+.hero h1.particles-active{animation:none;transform:none}
 .hero h1.particles-active,.hero h1.particles-active .muted{color:transparent}
-.name-particles{position:absolute;left:0;top:0;pointer-events:none;z-index:2;transition:opacity .35s ease}
+
 .intro-screen{position:fixed;inset:0;z-index:100;background:#fff;pointer-events:none;transition:opacity .55s cubic-bezier(.22,.61,.36,1)}
 .intro-screen.fade-out{opacity:0}
 .intro-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:101;pointer-events:none}
