@@ -172,3 +172,10 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 /* Prominent GitHub call to action. */
 .github-cta{gap:12px;background:#242428;color:#fff;border:1px solid #242428;margin-top:26px;padding:18px 28px;font-size:15px;font-weight:600;min-height:58px;box-shadow:0 4px 0 #24242816}.github-cta:hover{background:#404047;border-color:#404047;box-shadow:0 6px 0 #24242812}.github-cta svg{flex-shrink:0}
 
+/* Project tech stack chips and highlighted context hashtags. */
+.tech-stack,.context-hashtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tech-stack span{font:500 11px ui-monospace,Consolas,monospace;padding:3px 9px;color:#2b2b30;background:#fff;border:1px solid #d4d4dc;border-radius:0}
+.context-hashtags{padding-bottom:14px;border-bottom:1px solid var(--guide);margin-bottom:16px}
+.context-hashtags span{font:600 11px ui-monospace,Consolas,monospace;padding:3px 9px;color:#005bb5;background:#e8f2fc;border:1px solid #c3dcf7;border-radius:0;letter-spacing:.01em}
+
+
