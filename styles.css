@@ -212,7 +212,7 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .context-hashtags{gap:10px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--guide)}
 .context-hashtags span{padding:0;background:transparent;border:0;color:#005bb5;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:0}
 .project-story>p{font-size:16px;color:#66666c;max-width:480px;margin-bottom:10px}
-.project-info .tags{border-bottom:0;padding-bottom:0;margin:8px 0 0}
+.project-info .tags{border-bottom:0;padding-bottom:0;margin:0 0 14px}
 .card-dropdown{margin-bottom:14px}
 .card-dropdown.tech-dropdown{margin-bottom:18px}
 .card-dropdown summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;list-style:none;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;color:var(--muted);user-select:none;transition:color .2s}
