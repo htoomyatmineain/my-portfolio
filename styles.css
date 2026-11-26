@@ -242,7 +242,7 @@ body{background-image:linear-gradient(90deg,transparent calc(50% - 601px),var(--
 .card-dropdown[open] summary svg{transform:rotate(180deg)}
 .tech-dropdown .tech-stack{margin:8px 0 0;gap:6px}
 .tech-dropdown .tech-stack span{border-radius:999px;background:#fdf2f8;border:1px solid #fbcfe8;color:#9d174d;padding:3px 10px;font-family:inherit;font-size:11px;font-weight:500}
-.project-footer{margin-top:auto}
+.project-footer{margin-top:0}
 .project-footer .recognition{margin-top:10px}
 
 
