@@ -200,6 +200,11 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .header.nav-hidden{opacity:0;transform:translateY(-100%)}
 .header.nav-drop{animation:nav-drop .75s cubic-bezier(.22,1.14,.36,1) both}
 @keyframes nav-drop{0%{opacity:0;transform:translateY(-100%)}72%{opacity:1;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
+.project-links{gap:10px}
+.project-links .button{margin-top:0;padding:10px 18px;font-size:13px;font-weight:600;min-height:38px;border:1px solid var(--ink)}
+.project-links .button.outline{background:#fff;border-color:#c2c2c9;color:var(--ink)}
+.project-links .button.outline:hover{background:#ebebef;border-color:#8f8f99}
+
 
 
 
