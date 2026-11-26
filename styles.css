@@ -206,9 +206,8 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .project-links .button.outline:hover{background:#ebebef;border-color:#8f8f99}
 .project{display:flex;flex-direction:column;height:100%}
 .project-info{display:flex;flex-direction:column;flex:1}
-.project-info:before{display:none}
-.project-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin-bottom:6px}
-.project-meta .project-honors{margin-top:0;gap:6px}
+.project-info:before{display:block}
+.project-footer .project-honors{margin-top:20px}
 .context-hashtags{gap:10px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--guide)}
 .context-hashtags span{padding:0;background:transparent;border:0;color:#005bb5;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:0}
 .project-story>p{font-size:16px;color:#66666c;max-width:480px;margin-bottom:10px}
