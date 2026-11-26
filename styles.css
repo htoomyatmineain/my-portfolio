@@ -209,8 +209,17 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .project-info:before{display:none}
 .project-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin-bottom:6px}
 .project-meta .project-honors{margin-top:0;gap:6px}
-.context-hashtags{gap:10px;padding-bottom:14px;margin-bottom:16px}
+.context-hashtags{gap:10px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--guide)}
 .context-hashtags span{padding:0;background:transparent;border:0;color:#005bb5;font-weight:600}
+.project-story>p{font-size:16px;color:#66666c;max-width:480px;margin-bottom:10px}
+.project-info .tags{border-bottom:0;padding-bottom:0;margin-bottom:12px}
+.tech-dropdown{margin-bottom:18px;border:1px solid #f3d0e1;border-radius:14px;background:#fdf4f8;padding:10px 14px}
+.tech-dropdown summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;font:600 11px ui-monospace,Consolas,monospace;letter-spacing:.04em;text-transform:uppercase;color:#9d174d;user-select:none}
+.tech-dropdown summary::-webkit-details-marker{display:none}
+.tech-dropdown summary svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .22s ease}
+.tech-dropdown[open] summary svg{transform:rotate(180deg)}
+.tech-dropdown .tech-stack{margin:10px 0 2px;gap:6px}
+.tech-dropdown .tech-stack span{border-radius:999px;background:#fff;border:1px solid #f5bfd8;color:#9d174d;padding:3px 10px;font-weight:500}
 .project-footer{margin-top:auto}
 .project-footer .recognition{margin-top:10px}
 
