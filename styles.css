@@ -208,6 +208,27 @@ main{isolation:isolate}.hero h1:after{left:-100vw;right:-100vw}.hero-layout{bord
 .project-info{display:flex;flex-direction:column;flex:1}
 .project-info:before{display:block}
 .project-footer .project-honors{margin-top:20px}
+
+/* Vertical construction sketch lines across the drafting grid and section seams. */
+body{background-image:linear-gradient(90deg,transparent calc(50% - 601px),var(--guide) calc(50% - 601px),var(--guide) calc(50% - 600px),transparent calc(50% - 600px),transparent calc(50% - 301px),#77778212 calc(50% - 301px),#77778212 calc(50% - 300px),transparent calc(50% - 300px),transparent calc(50% - 1px),#77778214 calc(50% - 1px),#77778214 50%,transparent 50%,transparent calc(50% + 300px),#77778212 calc(50% + 300px),#77778212 calc(50% + 301px),transparent calc(50% + 301px),transparent calc(50% + 600px),var(--guide) calc(50% + 600px),var(--guide) calc(50% + 601px),transparent calc(50% + 601px))}
+.nav-links{border-left:1px solid var(--guide);border-right:1px solid var(--guide);padding-inline:28px}
+.nav-contact{border-left:1px solid var(--guide);padding-left:20px}
+.hero-copy{border-left:1px solid var(--guide);padding-left:18px}
+.hero-photo{border-left:1px dashed var(--guide)}
+.hero-meta .availability{border-left:1px solid var(--guide);padding-left:16px}
+.section-heading>p{border-left:1px solid var(--guide);padding-left:20px}
+.project-grid{position:relative}
+.project-grid:before{content:"";position:absolute;left:50%;top:-18px;bottom:-18px;border-left:1px dashed var(--guide);pointer-events:none}
+.project-info{border-left:1px solid var(--guide);padding-left:16px}
+.about:after{display:block;top:80px;bottom:80px;left:45.5%;border-left:1px dashed var(--guide)}
+.about-copy{border-left:1px solid var(--guide);padding-left:24px}
+.skill-groups>div+div{border-left:1px solid var(--guide);padding-left:20px}
+.contact h2{border-left:1px solid var(--guide);padding-left:18px}
+.contact-bottom>div{border-left:1px solid var(--guide);padding-left:20px}
+@media(max-width:1296px){body{background-image:linear-gradient(90deg,transparent 47px,var(--guide) 47px,var(--guide) 48px,transparent 48px,transparent calc(50% - 1px),#77778214 calc(50% - 1px),#77778214 50%,transparent 50%,transparent calc(100% - 48px),var(--guide) calc(100% - 48px),var(--guide) calc(100% - 47px),transparent calc(100% - 47px))}}
+@media(max-width:900px){.nav-links,.nav-contact,.hero-photo,.section-heading>p,.about-copy,.skill-groups>div+div,.contact-bottom>div{border-left:0;border-right:0;padding-inline:0;padding-left:0}.project-grid:before,.about:after{display:none}.hero-copy,.project-info,.contact h2{border-left:1px solid var(--guide);padding-left:14px}}
+@media(max-width:600px){body{background-image:linear-gradient(90deg,transparent 19px,var(--guide) 19px,var(--guide) 20px,transparent 20px,transparent calc(50% - 1px),#77778212 calc(50% - 1px),#77778212 50%,transparent 50%,transparent calc(100% - 20px),var(--guide) calc(100% - 20px),var(--guide) calc(100% - 19px),transparent calc(100% - 19px))}.hero-copy,.project-info,.contact h2{padding-left:12px}}
+
 .context-hashtags{gap:10px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--guide)}
 .context-hashtags span{padding:0;background:transparent;border:0;color:#005bb5;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:0}
 .project-story>p{font-size:16px;color:#66666c;max-width:480px;margin-bottom:10px}
