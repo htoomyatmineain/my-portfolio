@@ -2,23 +2,23 @@
 
 The foundation intentionally omits missing assets and unconfirmed details. This is an owner checklist, not public website content.
 
-- [x] Profile photo added to the About section.
+- [x] About section media updated: `assets/hamriley.png` replaced with the looping video `assets/coding pixels.mp4` (`<figure class="portrait">`, full width on mobile/tablet, `460px` max on desktop).
 - [x] Supplied ARES and ASEAN Explorer project images added.
 - [x] Kinn Htout screenshot added to its project card.
 - [x] A Yate Sitt screenshot added to its project card.
-- [x] Verified live demo URLs (rechecked 2026-11-23). All four project cards link to live demos; each URL checked and reachable: kinn-htout, ares-martian-survival-map, a-yate-sitt, asean-explorer-two. `python verify.py` also passes (HTML parse, unique IDs, anchors, local assets).
-- [ ] Resume PDF. No download button is shown until a file exists.
+- [x] Verified live demo URLs (rechecked 2026-11-23) and scanned all four GitHub repos for tech stacks. Project cards now display role tags under the title, description + inline context hashtags, closed-by-default **Tech stacks** dropdowns with rounded pink pill badges, and primary/secondary **Live demo** / **View repository** buttons. `python verify.py` passes (HTML parse, unique IDs, anchors, local assets).
+- [x] Added `#resume` section from CV (Summary, Education, Technical Skills, Professional Experience, Selected Projects, Leadership & Achievements) with a **Print / Save PDF** button (`#print-resume`) and `@media print` styles. No standalone downloadable PDF file is stored in the repo yet.
 - [ ] Confirm confidence and direct coding experience for the technologies listed in the GitHub profile. No proficiency ratings are used.
-- [ ] MCPA Yangon joining date and responsibilities. Only the confirmed membership title is shown.
+- [x] MCPA Yangon responsibilities updated in `#resume` (`Working Group Member, MCPA — Tech & Education Committee (2026)`, 10th Anniversary events & job fairs); exact joining month/date still omitted.
 - [ ] Confirm ParcelCare versus ParecelCare spelling. The experience entry uses a descriptive project name for now.
 - [ ] Add original certificate files to a public assets directory when ready; participation is kept distinct from prizes. `certificate-preview.png` sits at the repo root but is not published in `assets/` or referenced by the page.
-- [ ] Confirm official ASEAN Digital Awards category wording and update pending judging result when available. Page currently shows "ASEAN Digital Awards 2027 · Digital Innovation" with judging pending.
+- [ ] Confirm official ASEAN Digital Awards category wording and update result when available. Removed the "Judging pending" badge from the Kinn Htout card; card currently shows "Myanmar representative" and "ASEAN Digital Awards 2027 · Digital Innovation".
 - [ ] Add specific personal contributions, demos, technical decisions, and verified outcomes to future project case studies.
 
 ## Repo housekeeping
 
-- Unused image assets referenced by nothing on the page: `assets/journey-*.png` (5 files, ~10.1 MB total: cavc, lets-tech, nasa-practice, nasa-space-apps, uit-hackathon) and `assets/hero-face-source.png` (~0.8 MB). Delete or wire them into the Journey section. `styles.css` already has `.timeline.journey-cards .journey-image` rules and `script.js` paginates the timeline, so wiring images only needs markup (and optional `loading="lazy"`).
-- Dormant particle-portrait feature: `script.js` and `styles.css` contain `.particle-stage` code, and `assets/portrait-points.js` plus generator `make_portrait_points.py` exist on disk, but `index.html` has no `#portrait-particles` canvas and never loads the points file. `assets/portrait-points.js` is listed in both `.gitignore` and `.vercelignore`, so it would not ship even if referenced. Remove the dead code, or finish wiring the feature and un-ignore the data file.
+- Unused image assets referenced by nothing on the page: `assets/journey-*.png` (5 files: cavc, lets-tech, nasa-practice, nasa-space-apps, uit-hackathon), `assets/hero-face-source.png`, and `assets/hamriley.png` (replaced by `assets/coding pixels.mp4` in the About section). Delete or wire them in if needed.
+- Dormant particle-portrait feature: `script.js` and `styles.css` contain `.particle-stage` code, and `assets/portrait-points.js` plus generator `make_portrait_points.py` exist on disk, but `index.html` has no `#portrait-particles` canvas and never loads the points file. `assets/portrait-points.js` is listed in both `.gitignore` and `.vercelignore`, so it would not ship even if referenced. (Separate from the active `"Hamriley.dev"` typewriter-to-particle hero intro in `script.js`.)
 - `certificate-preview.png` (~1.2 MB, repo root) is gitignored and vercelignored; original certificates are not in `assets/` and are not referenced by the page.
 - Local-only / ignored files confirmed present: `certificate-preview.png`, `assets/portrait-points.js`, `assets/hero-face-source.png`, `assets/journey-*.png`, `make_portrait_points.py`. `verify.py` and `CONTENT-CHECKLIST.md` are vercelignored.
 
@@ -32,4 +32,4 @@ The foundation intentionally omits missing assets and unconfirmed details. This 
 
 ## Current design
 
-Apple-inspired light gray, large typography, generous whitespace, restrained color in conceptual project artwork, subtle entrance animations, and reduced-motion support.
+Apple-inspired light gray drafting sheet with vertical and horizontal construction sketch lines, `"Hamriley.dev"` typewriter intro morphing via particles into `"Htoo Myat Min Eain."` with a navbar drop, looping About video, project cards with inline context hashtags and collapsible pink-badge tech stacks, a printable `#resume` section, and reduced-motion support.
