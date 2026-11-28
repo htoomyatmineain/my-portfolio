@@ -10,7 +10,6 @@ The foundation intentionally omits missing assets and unconfirmed details. This 
 - [x] Added `#resume` section from CV (Summary, Education, Technical Skills, Professional Experience, Selected Projects, Leadership & Achievements) with a **Print / Save PDF** button (`#print-resume`) and `@media print` styles. No standalone downloadable PDF file is stored in the repo yet.
 - [ ] Confirm confidence and direct coding experience for the technologies listed in the GitHub profile. No proficiency ratings are used.
 - [x] MCPA Yangon responsibilities updated in `#resume` (`Working Group Member, MCPA — Tech & Education Committee (2026)`, 10th Anniversary events & job fairs); exact joining month/date still omitted.
-- [ ] Confirm ParcelCare versus ParecelCare spelling. The experience entry uses a descriptive project name for now.
 - [ ] Add original certificate files to a public assets directory when ready; participation is kept distinct from prizes. `certificate-preview.png` sits at the repo root but is not published in `assets/` or referenced by the page.
 - [ ] Confirm official ASEAN Digital Awards category wording and update result when available. Removed the "Judging pending" badge from the Kinn Htout card; card currently shows "Myanmar representative" and "ASEAN Digital Awards 2027 · Digital Innovation".
 - [ ] Add specific personal contributions, demos, technical decisions, and verified outcomes to future project case studies.
@@ -28,7 +27,7 @@ The foundation intentionally omits missing assets and unconfirmed details. This 
 - Describe ARES as a prototype; do not claim validated navigation safety or image-processing scale.
 - Keep the original NASA practice MVP separate from later Ember Atlas development.
 - Next.js is described as agent-assisted project exposure, not a proficiency claim.
-- Four main hackathons/buildathons (Let's Tech, UIT Innovative, Into the AI Ocean, NASA Space Apps), one practice round (NASA practice), and one awards submission (ASEAN Digital Awards); the ASEAN–Japan video competition is a separate finalist entry. Do not inflate the count.
+- Three main hackathons (Let's Tech, UIT Innovative, NASA Space Apps), one practice round (NASA practice), and one awards submission (ASEAN Digital Awards); the ASEAN–Japan video competition is a separate finalist entry. Do not inflate the count.
 
 ## Current design
 
