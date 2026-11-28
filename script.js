@@ -190,6 +190,11 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   sync();
 })();
 
+const printResumeBtn = document.querySelector('#print-resume');
+if (printResumeBtn) {
+  printResumeBtn.addEventListener('click', () => window.print());
+}
+
 // Full-screen "Hamriley.dev" typewriter intro -> hold -> decompose into particles -> smooth morph into "Htoo Myat Min Eain." + navbar drop.
 (() => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -340,8 +345,8 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
   }
 
   function startMorph() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vw = introCanvas.clientWidth || window.innerWidth;
+    const vh = introCanvas.clientHeight || window.innerHeight;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     introCanvas.width = Math.round(vw * dpr);
@@ -367,12 +372,13 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
     targetPts.sort((a, b) => a.tx - b.tx || a.ty - b.ty);
 
     const total = targetPts.length;
+    const isMobile = vw < 640;
     const particles = targetPts.map((tp, i) => {
       const src = introPts[Math.floor((i / total) * introPts.length)];
       const vx = h1Rect.left + tp.tx;
       const vy = h1Rect.top + tp.ty;
       const arcAngle = Math.random() * Math.PI * 2;
-      const arcMag = 14 + Math.random() * 42;
+      const arcMag = isMobile ? 6 + Math.random() * 18 : 14 + Math.random() * 42;
       return {
         ...tp,
         ix: src.x,
